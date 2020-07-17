@@ -1,0 +1,249 @@
+#!/bin/bash
+
+set -x
+set -e
+
+## TODO: Packaging should make sure these packages are installed in dom0
+##       before proceeding.
+#sudo qubes-dom0-update socat openssh-server x2goserver
+
+## TODO: do not hardcode sys-whonix - make that an environment variable or command line parameter
+
+no_root_check() {
+    if [ "$(id -u)" = "0" ]; then
+        echo "ERROR: Do not run $0 as root / with sudo!"
+        exit 100
+    fi
+}
+
+preparation() {
+    temp_dir="$(mktemp --directory)"
+    mkdir -p "$temp_dir/keys"
+}
+
+colors() {
+   if [ "$TERM" = "" ]; then
+      return 0
+   fi
+
+   ## Thanks to:
+   ## http://mywiki.wooledge.org/BashFAQ/037
+   ## Variables for terminal requests.
+   [[ -t 2 ]] && {
+       export alt=$(      tput smcup  || tput ti      ) # Start alt display
+       export ealt=$(     tput rmcup  || tput te      ) # End   alt display
+       export hide=$(     tput civis  || tput vi      ) # Hide cursor
+       export show=$(     tput cnorm  || tput ve      ) # Show cursor
+       export save=$(     tput sc                     ) # Save cursor
+       export load=$(     tput rc                     ) # Load cursor
+       export bold=$(     tput bold   || tput md      ) # Start bold
+       export stout=$(    tput smso   || tput so      ) # Start stand-out
+       export estout=$(   tput rmso   || tput se      ) # End stand-out
+       export under=$(    tput smul   || tput us      ) # Start underline
+       export eunder=$(   tput rmul   || tput ue      ) # End   underline
+       export reset=$(    tput sgr0   || tput me      ) # Reset cursor
+       export blink=$(    tput blink  || tput mb      ) # Start blinking
+       export italic=$(   tput sitm   || tput ZH      ) # Start italic
+       export eitalic=$(  tput ritm   || tput ZR      ) # End   italic
+   [[ $TERM != *-m ]] && {
+       export red=$(      tput setaf 1|| tput AF 1    )
+       export green=$(    tput setaf 2|| tput AF 2    )
+       export yellow=$(   tput setaf 3|| tput AF 3    )
+       export blue=$(     tput setaf 4|| tput AF 4    )
+       export magenta=$(  tput setaf 5|| tput AF 5    )
+       export cyan=$(     tput setaf 6|| tput AF 6    )
+   }
+       export white=$(    tput setaf 7|| tput AF 7    )
+       export default=$(  tput op                     )
+       export eed=$(      tput ed     || tput cd      )   # Erase to end of display
+       export eel=$(      tput el     || tput ce      )   # Erase to end of line
+       export ebl=$(      tput el1    || tput cb      )   # Erase to beginning of line
+       export ewl=$eel$ebl                                # Erase whole line
+       export draw=$(     tput -S <<< '   enacs
+                                   smacs
+                                   acsc
+                                   rmacs' || { \
+                   tput eA; tput as;
+                   tput ac; tput ae;         } )   # Drawing characters
+       export back=$'\b'
+   } 2>/dev/null ||:
+}
+
+dom0_rpc_policy_setup() {
+    local append_string
+
+    if ! test -d /etc/qubes-rpc/policy ; then
+        sudo mkdir -p /etc/qubes-rpc/policy
+    fi
+
+    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
+        sudo touch /etc/qubes-rpc/policy/qubes.ConnectTCP
+    fi
+
+    test -r /etc/qubes-rpc/policy/qubes.ConnectTCP
+
+    append_string="sys-whonix dom0 allow,target=dom0"
+    if grep --quiet "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
+        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP added modified."
+    else
+        echo "$append_string" | sudo tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP
+    fi
+
+    ## Debugging.
+    cat /etc/qubes-rpc/policy/qubes.ConnectTCP
+}
+
+dom0_sshd_hardening() {
+    local old new file_name
+    if ! test -e /etc/ssh/sshd_config ; then
+        true "ERROR: file /etc/ssh/sshd_config does not exist!"
+        exit 1
+    fi
+    ## dom0 minimal sshd configuration hardening
+    old="PasswordAuthentication yes"
+    new="PasswordAuthentication no"
+    file_name="/etc/ssh/sshd_config"
+    sudo sed -i "s/$old/$new/g" "$file_name"
+}
+
+check_vm_installed() {
+    qvm_ls_output="$(qvm-ls sys-whonix --no-spinner --raw-data)"
+}
+
+start_vm() {
+    local qvm_ls_output
+
+    qvm_ls_output="$(qvm-ls sys-whonix --fields state --no-spinner --raw-data)"
+
+    if [ "$qvm_ls_output" = "Running" ]; then
+        true "INFO: already running, ok."
+    else
+        ## Would exit non-zero if already running.
+        true "INFO: Not yet running, starting..."
+        qvm-start sys-whonix
+    fi
+}
+
+vm_setup() {
+    ## --pass-io is optional but useful for gathering debug output.
+
+    qvm-run --user root --pass-io sys-whonix "systemctl restart qubes-whonix-remote-support.service"
+
+    qvm-run --user root --pass-io sys-whonix "systemctl --no-pager --no-block status qubes-whonix-remote-support.service"
+
+    qvm-run --user root --pass-io sys-whonix "virtport=22 hsport=22 hsname=remote_support client=1 anon-auth-autogen"
+}
+
+dom0_get_tor_auth_private() {
+    ## TODO: qubes needs a qubes-copy-from-vm utility
+    qubes-copy-from-vm sys-whonix /var/lib/tor_autogen/remote_support/1.auth_private "$temp_dir/keys/1.auth_private"
+
+    ## TODO: remove debugging
+    cat "$temp_dir/keys/1.auth_private"
+}
+
+dom0_sshd_setup() {
+    local append_string
+
+    ## Generate SSH private key in dom0 of remote-support-receiver.
+    ## untrusted sys-whonix: Goal is sys-whonix to never have access to SSH private key.
+    ## - '-N ""' key without passphrase.
+    ## Creates files:
+    ## - $temp_dir/keys/id_ed25519
+    ## - $temp_dir/keys/id_ed25519.pub
+    ssh-keygen -t ed25519 -f "$temp_dir/keys/id_ed25519" -N "" -C "qubes-remote-support-receiver-auto-generated"
+
+    mkdir -p ~/.ssh
+    sudo chmod 700 ~/.ssh
+    touch ~/.ssh/authorized_keys
+    sudo chmod 600 ~/.ssh/*
+
+    append_string="$(cat "$temp_dir/keys/id_ed25519.pub")"
+    echo "$append_string" | sudo tee --append ~/.ssh/authorized_keys
+
+    ## systemctl enable not required.
+    sudo systemctl restart sshd.service
+    ## reload in corner case if sshd was already running.
+    sudo systemctl reload sshd.service
+    sudo systemctl --no-pager --no-block status sshd.service
+}
+
+dom0_x2go_setup() {
+    sudo x2godbadmin --createdb
+    ## systemctl enable not required.
+    #sudo systemctl enable x2gocleansessions.service
+    sudo systemctl restart x2gocleansessions.service
+    sudo systemctl --no-pager --no-block status x2gocleansessions.service
+}
+
+dom0_create_key_files_archive() {
+    tar -zcvf "$temp_dir/remote-support-keys.tar.gz" -C "$temp_dir" keys
+}
+
+wormhole_send_wrapper() {
+    test -r "$temp_dir/remote-support-keys.tar.gz"
+
+    local found
+    found=no
+
+    while read -r line ; do
+        true "INFO: line: $line"
+        if [ "$line" = "" ]; then
+            ## Shorter xtrace.
+            continue
+        fi
+        read -r first second third _ <<< "$line" || { echo "parsing error in line: $line" >&2 ; true ;};
+        true "first: $first"
+        true "second: $second"
+        true "third: $third"
+        if [ "$first" = "wormhole" ]; then
+            if [ "$second" = "receive" ]; then
+                true "${green}${bold}INFO: next line is wormhole code.${reset}"
+                echo "$third"
+                found=yes
+            fi
+        fi
+        ## wormhole writes to stderr, hence we must use 2>&1 to redirect to stdout,
+        ## so bash's "while read" can access it.
+
+    ## wormhole_tool_
+    ## - run either 'wormhole send' directly
+    ## - or run qubes-remote-support-receiver-wormhole-helper which runs it in a DispVM.
+    done < <( $wormhole_tool "$temp_dir/remote-support-keys.tar.gz" 2>&1 )
+
+    if [ "$found" = "no" ]; then
+        true "${red}${bold}ERROR: wormhole issue.${reset}"
+    fi
+}
+
+no_root_check
+preparation
+colors
+dom0_rpc_policy_setup
+dom0_sshd_hardening
+check_vm_installed
+start_vm
+vm_setup
+dom0_get_tor_auth_private
+dom0_sshd_setup
+dom0_x2go_setup
+dom0_create_key_files_archive
+
+## TODO: What do we do about Qubes R4.0 vs missing magic-wormhole?
+if command -v wormhole >/dev/null ; then
+    ## wormhole available in dom0
+    ## TODO: not implemented yet due to lacking available wormhole in dom0
+    wormhole_tool=wormhole
+else
+    ## Starting a DispVM good enough until Qubes R4.1?
+    ## TODO: path
+    wormhole_tool=~/qubes-remote-support-receiver-wormhole-helper
+fi
+
+wormhole_send_wrapper
+
+true "INFO: Success."
+
+## qubes-remote-support-provider
+#mkdir -p "$temp_dir"
+#tar -xvf remote-support-keys.tar.gz -C "$temp_dir"

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -x
+set -e
+
+base64_stream="$(cat "$1" | base64 --wrap=0)"
+
+qvm-run \
+    --verbose \
+    --autostart \
+    --dispvm whonix-ws-15-dvm \
+    --pass-io \
+    "
+bash -c \"
+
+mkdir /tmp/qubes-remote-support
+
+echo \"$base64_stream\" | base64 --decode > /tmp/qubes-remote-support/remote-support-keys.tar.gz
+
+wormhole send /tmp/qubes-remote-support/remote-support-keys.tar.gz
+
+\"
+"

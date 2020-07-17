@@ -1,0 +1,77 @@
+#!/bin/bash
+
+set -x
+set -e
+set -o errtrace
+
+## TODO: do not hardcode sys-whonix - make that an environment variable or command line parameter
+
+error_handler() {
+    local exit_code="$?"
+    echo "INFO: BASH_COMMAND '$BASH_COMMAND' terminated with exit_code '$exit_code'. Remote support will not work." >&2
+    exit "$exit_code"
+}
+
+trap error_handler ERR
+
+no_root_check() {
+    if [ "$(id -u)" = "0" ]; then
+        echo "ERROR: Do not run $0 as root / with sudo!"
+        exit 100
+    fi
+}
+
+dom0_check_rpc_policy() {
+    local append_string
+
+    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
+        exit 2
+    fi
+
+    append_string="sys-whonix dom0 allow,target=dom0"
+
+    if grep -q "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
+        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP looks OK."
+    else
+        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP missing line
+$append_string
+remote support will not work."
+        exit 3
+    fi
+}
+
+check_vm_started() {
+    local qvm_ls_output
+
+    qvm_ls_output="$(qvm-ls sys-whonix --fields state --no-spinner --raw-data)"
+
+    if [ "$qvm_ls_output" = "Running" ]; then
+        true "INFO: already running, ok."
+    else
+        exit 3
+    fi
+}
+
+check_vm_status() {
+    ## --pass-io is optional but useful for gathering debug output.
+
+    qvm-run --user root --pass-io sys-whonix "systemctl status --no-pager --no-block qubes-whonix-remote-support.service"
+    qvm-run --user root --pass-io sys-whonix "systemctl status --no-pager --no-block tor@default.service"
+}
+
+dom0_check_sshd_status() {
+    sudo systemctl --no-pager --no-block status sshd.service
+}
+
+no_root_check
+
+## If dom0 SSH server is not running, there is no way to remote administrate dom0.
+## However, the onion v3 service might still be running inside sys-whonix in case
+## of a race condition.
+dom0_check_sshd_status
+
+dom0_check_rpc_policy
+check_vm_started
+check_vm_status
+
+true "INFO: Success."
