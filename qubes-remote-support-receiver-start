@@ -16,6 +16,10 @@ no_root_check() {
     fi
 }
 
+dom0_copy_from_vm() {
+    qvm-run --user root --pass-io "$1" "cat $2" > "$3"
+}
+
 preparation() {
     temp_dir="$(mktemp --directory)"
     mkdir -p "$temp_dir/keys"
@@ -86,7 +90,7 @@ dom0_rpc_policy_setup() {
     if grep --quiet "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
         true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP added modified."
     else
-        echo "$append_string" | sudo tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP
+        echo "$append_string" | sudo tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP >/dev/null
     fi
 
     ## Debugging.
@@ -135,15 +139,21 @@ vm_setup() {
 }
 
 dom0_get_tor_auth_private() {
-    ## TODO: qubes needs a qubes-copy-from-vm utility
-    qubes-copy-from-vm sys-whonix /var/lib/tor_autogen/remote_support/1.auth_private "$temp_dir/keys/1.auth_private"
+    dom0_copy_from_vm sys-whonix /var/lib/tor_autogen/remote_support/1.auth_private "$temp_dir/keys/1.auth_private"
 
     ## TODO: remove debugging
     cat "$temp_dir/keys/1.auth_private"
+
+    dom0_copy_from_vm sys-whonix /var/lib/tor/remote_support/hostname "$temp_dir/keys/hostname"
+
+    ## TODO: remove debugging
+    cat "$temp_dir/keys/hostname"
 }
 
 dom0_sshd_setup() {
     local append_string
+    local one two three
+    local ssh_keyscan_output ssh_algorithm ssh_fingerprint
 
     ## Generate SSH private key in dom0 of remote-support-receiver.
     ## untrusted sys-whonix: Goal is sys-whonix to never have access to SSH private key.
@@ -159,13 +169,47 @@ dom0_sshd_setup() {
     sudo chmod 600 ~/.ssh/*
 
     append_string="$(cat "$temp_dir/keys/id_ed25519.pub")"
-    echo "$append_string" | sudo tee --append ~/.ssh/authorized_keys
+    echo "$append_string" | tee --append ~/.ssh/authorized_keys >/dev/null
 
     ## systemctl enable not required.
     sudo systemctl restart sshd.service
     ## reload in corner case if sshd was already running.
     sudo systemctl reload sshd.service
     sudo systemctl --no-pager --no-block status sshd.service
+}
+
+dom0_sshd_fingerprint() {
+    ssh_keyscan_output="$(ssh-keyscan -t ed25519 -H 127.0.0.1)"
+    ## example output stderr:
+    ## # 127.0.0.1:22 SSH-2.0-OpenSSH_7.4
+    ## example output stdout:
+    ## |1|5kanhyz0x+i5x+8OE2uEEOFNhi4=|ewEL3Cc3nu9XzMfzb3knbgwxp7Q= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJgOxh9EHKZc7JPKSkkoRjrfqBCWRXZQeeP3mll8yZw1
+    ##
+    ## the format is
+    ## hashed-hostname algorithm fingerprint
+    ##
+    ## We cannot use the hashed hostname as dom0 is "unaware" of its onion hostname.
+    ## dom0 cannot reach the onion hostname using ssh ssh-keyscan.
+    ## And if that was possible, it should not. Fingerprint should be securely obtained from localhost.
+    read -r one two three <<< "$ssh_keyscan_output" || { echo "parsing error in ssh_keyscan_output: '$ssh_keyscan_output'" >&2 ; true ;};
+
+    ssh_algorithm="$two"
+    ssh_fingerprint="$three"
+
+    echo "$ssh_algorithm" | tee "$temp_dir/keys/ssh_algorithm" >/dev/null
+    echo "$ssh_fingerprint" | tee "$temp_dir/keys/ssh_fingerprint" >/dev/null
+
+    ## output of ssh-keygen not suitable to be added to ~/.ssh/known_hosts
+    ## on remote-support-provider.
+    #ssh-keygen -l -f /etc/ssh/ssh_host_ecdsa_key.pub
+    ## Example output:
+    ## 256 SHA256:ope57TCAoeTn4+ORmL21Hq50Uy9244M9VK2LEK0nJQ0 no comment (ECDSA)
+    ##
+    ## Could not figure out to use this with known_hosts file.
+
+    ## Debugging.
+    cat "$temp_dir/keys/ssh_algorithm"
+    cat "$temp_dir/keys/ssh_fingerprint"
 }
 
 dom0_x2go_setup() {
@@ -192,7 +236,7 @@ wormhole_send_wrapper() {
             ## Shorter xtrace.
             continue
         fi
-        read -r first second third _ <<< "$line" || { echo "parsing error in line: $line" >&2 ; true ;};
+        read -r first second third _ <<< "$line" || { echo "parsing error in line: '$line'" >&2 ; true ;};
         true "first: $first"
         true "second: $second"
         true "third: $third"
@@ -226,6 +270,7 @@ start_vm
 vm_setup
 dom0_get_tor_auth_private
 dom0_sshd_setup
+dom0_sshd_fingerprint
 dom0_x2go_setup
 dom0_create_key_files_archive
 
@@ -243,7 +288,3 @@ fi
 wormhole_send_wrapper
 
 true "INFO: Success."
-
-## qubes-remote-support-provider
-#mkdir -p "$temp_dir"
-#tar -xvf remote-support-keys.tar.gz -C "$temp_dir"
