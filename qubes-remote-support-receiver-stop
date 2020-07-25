@@ -45,6 +45,7 @@ vm_setup() {
     qvm-run --user root --pass-io sys-whonix "systemctl stop qubes-whonix-remote-support.service"
 
     qvm-run --user root --pass-io sys-whonix "rm --force --verbose /usr/local/etc/torrc.d/43_remote_support_hs_autogen.conf"
+    qvm-run --user root --pass-io sys-whonix "rm --force --recursive --verbose /var/lib/tor/remote_support"
     qvm-run --user root --pass-io sys-whonix "rm --force --recursive --verbose /var/lib/tor_autogen/remote_support"
 
     ## Check if Tor is running.
