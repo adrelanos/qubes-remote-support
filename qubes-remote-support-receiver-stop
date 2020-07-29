@@ -27,14 +27,9 @@ dom0_rpc_policy_setup() {
 }
 
 start_vm() {
-    local qvm_ls_output
-
-    qvm_ls_output="$(qvm-ls sys-whonix --fields state --no-spinner --raw-data)"
-
-    if [ "$qvm_ls_output" = "Running" ]; then
+    if qvm-check --running sys-whonix ; then
         true "INFO: already running, ok."
     else
-        ## Would exit non-zero if already running.
         qvm-start sys-whonix
     fi
 }

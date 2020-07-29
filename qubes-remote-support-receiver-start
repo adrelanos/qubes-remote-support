@@ -80,21 +80,21 @@ dom0_rpc_policy_setup() {
         sudo mkdir -p /etc/qubes-rpc/policy
     fi
 
-    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
-        sudo touch /etc/qubes-rpc/policy/qubes.ConnectTCP
+    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
+        sudo touch /etc/qubes-rpc/policy/qubes.ConnectTCP+22
     fi
 
-    test -r /etc/qubes-rpc/policy/qubes.ConnectTCP
+    test -r /etc/qubes-rpc/policy/qubes.ConnectTCP+22
 
     append_string="sys-whonix dom0 allow,target=dom0"
-    if grep --quiet "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
-        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP added modified."
+    if grep --quiet "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
+        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 added modified."
     else
-        echo "$append_string" | sudo tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP >/dev/null
+        echo "$append_string" | sudo tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP+22 >/dev/null
     fi
 
     ## Debugging.
-    cat /etc/qubes-rpc/policy/qubes.ConnectTCP
+    cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
 }
 
 dom0_sshd_hardening() {
@@ -111,15 +111,11 @@ dom0_sshd_hardening() {
 }
 
 check_vm_installed() {
-    qvm_ls_output="$(qvm-ls sys-whonix --no-spinner --raw-data)"
+    qvm-check sys-whonix
 }
 
 start_vm() {
-    local qvm_ls_output
-
-    qvm_ls_output="$(qvm-ls sys-whonix --fields state --no-spinner --raw-data)"
-
-    if [ "$qvm_ls_output" = "Running" ]; then
+    if qvm-check --running sys-whonix ; then
         true "INFO: already running, ok."
     else
         ## Would exit non-zero if already running.
@@ -173,8 +169,6 @@ dom0_sshd_setup() {
 
     ## systemctl enable not required.
     sudo systemctl restart sshd.service
-    ## reload in corner case if sshd was already running.
-    sudo systemctl reload sshd.service
     sudo systemctl --no-pager --no-block status sshd.service
 }
 

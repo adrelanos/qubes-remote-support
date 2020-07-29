@@ -41,11 +41,7 @@ remote support will not work."
 }
 
 check_vm_started() {
-    local qvm_ls_output
-
-    qvm_ls_output="$(qvm-ls sys-whonix --fields state --no-spinner --raw-data)"
-
-    if [ "$qvm_ls_output" = "Running" ]; then
+    if qvm-check --running sys-whonix ; then
         true "INFO: already running, ok."
     else
         exit 3
