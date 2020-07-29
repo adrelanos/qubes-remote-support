@@ -15,7 +15,7 @@ no_root_check() {
 dom0_rpc_policy_setup() {
     local append_string
 
-    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
+    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
         return 0
     fi
 
@@ -23,7 +23,7 @@ dom0_rpc_policy_setup() {
     append_string="sys-whonix dom0 allow,target=dom0"
 
     ## Debugging.
-    cat /etc/qubes-rpc/policy/qubes.ConnectTCP
+    cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
 }
 
 start_vm() {

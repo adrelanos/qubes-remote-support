@@ -24,16 +24,16 @@ no_root_check() {
 dom0_check_rpc_policy() {
     local append_string
 
-    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
+    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
         exit 2
     fi
 
     append_string="sys-whonix dom0 allow,target=dom0"
 
-    if grep -q "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP ; then
-        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP looks OK."
+    if grep -q "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
+        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 looks OK."
     else
-        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP missing line
+        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 missing line
 $append_string
 remote support will not work."
         exit 3
