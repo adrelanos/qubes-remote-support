@@ -62,18 +62,18 @@ dom0_sshd_setup() {
     touch ~/.ssh/authorized_keys
     sudo chmod 600 ~/.ssh/*
 
-    ## TODO: Should remove all keys from file ~/.ssh/authorized_keys that contain
+    ## XXX: Should remove all keys from file ~/.ssh/authorized_keys that contain
     ## comment qubes-remote-support-receiver-auto-generated or delete whole file
     ## ~/.ssh/authorized_keys ?
     ##
     ## Deleting whole file ~/.ssh/authorized_keys seems more robust at the expense
     ## of advanced users and developers using custom (not by qubes-remote-support
     ## package) SSH servers.
+    ##
     ## Alternatively, keys matching the SSH key comment
     ## "qubes-remote-support-receiver-auto-generated" could be removed too but
-    ## that code is more fragile to race conditions.
-
-    ## TODO: handle ~/.ssh/authorized_keys as per above
+    ## that code is more fragile to race conditions. That is implemented now.
+    sed -i '/qubes-remote-support-receiver-auto-generated/,+1 d' ~/.ssh/authorized_keys || true
 
     sudo systemctl stop sshd.service
 }
