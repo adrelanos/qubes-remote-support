@@ -4,7 +4,10 @@ set -x
 set -e
 set -o errtrace
 
-## TODO: do not hardcode sys-whonix - make that an environment variable or command line parameter
+vm_name="$2"
+if [ "$vm_name" = "" ]; then
+    vm_name="sys-whonix"
+fi
 
 error_handler() {
     local exit_code="$?"
@@ -28,7 +31,7 @@ dom0_check_rpc_policy() {
         exit 2
     fi
 
-    append_string="sys-whonix dom0 allow,target=dom0"
+    append_string="$vm_name dom0 allow,target=dom0"
 
     if grep -q "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
         true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 looks OK."
@@ -41,7 +44,7 @@ remote support will not work."
 }
 
 check_vm_started() {
-    if qvm-check --running sys-whonix ; then
+    if qvm-check --running "$vm_name" ; then
         true "INFO: already running, ok."
     else
         exit 3
@@ -51,8 +54,8 @@ check_vm_started() {
 check_vm_status() {
     ## --pass-io is optional but useful for gathering debug output.
 
-    qvm-run --user root --pass-io sys-whonix "systemctl status --no-pager --no-block qubes-whonix-remote-support.service"
-    qvm-run --user root --pass-io sys-whonix "systemctl status --no-pager --no-block tor@default.service"
+    qvm-run --user root --pass-io "$vm_name" "systemctl status --no-pager --no-block qubes-whonix-remote-support.service"
+    qvm-run --user root --pass-io "$vm_name" "systemctl status --no-pager --no-block tor@default.service"
 }
 
 dom0_check_sshd_status() {
@@ -62,7 +65,7 @@ dom0_check_sshd_status() {
 no_root_check
 
 ## If dom0 SSH server is not running, there is no way to remote administrate dom0.
-## However, the onion v3 service might still be running inside sys-whonix in case
+## However, the onion v3 service might still be running inside $vm_name in case
 ## of a race condition.
 dom0_check_sshd_status
 
