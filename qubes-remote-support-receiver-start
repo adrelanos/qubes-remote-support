@@ -13,7 +13,7 @@ fi
 
 no_root_check() {
     if [ "$(id -u)" = "0" ]; then
-        echo "ERROR: Do not run $0 as root / with sudo!"
+        echo "ERROR: Do not run $0 as root / with sudo!" >&2
         exit 100
     fi
 }
@@ -102,7 +102,7 @@ dom0_rpc_policy_setup() {
 dom0_sshd_hardening() {
     local old new file_name
     if ! test -e /etc/ssh/sshd_config ; then
-        true "ERROR: file /etc/ssh/sshd_config does not exist!"
+        echo "ERROR: file /etc/ssh/sshd_config does not exist!" >&2
         exit 1
     fi
     ## dom0 minimal sshd configuration hardening
@@ -253,7 +253,7 @@ wormhole_send_wrapper() {
     done < <( $wormhole_tool "$temp_dir/remote-support-keys.tar.gz" 2>&1 )
 
     if [ "$found" = "no" ]; then
-        true "${red}${bold}ERROR: wormhole issue.${reset}"
+        echo "${red}${bold}ERROR: wormhole issue.${reset}" >&2
     fi
 }
 

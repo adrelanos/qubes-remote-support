@@ -9,7 +9,7 @@ fi
 
 no_root_check() {
     if [ "$(id -u)" = "0" ]; then
-        echo "ERROR: Do not run $0 as root / with sudo!"
+        echo "ERROR: Do not run $0 as root / with sudo!" >&2
         exit 100
     fi
 }
