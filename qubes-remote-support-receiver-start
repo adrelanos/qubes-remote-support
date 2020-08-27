@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -e
 
 ## TODO: Packaging should make sure these packages are installed in dom0
@@ -94,7 +93,7 @@ dom0_rpc_policy_setup() {
     fi
 
     ## Debugging.
-    cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
+    #cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
 }
 
 dom0_sshd_hardening() {
@@ -111,39 +110,39 @@ dom0_sshd_hardening() {
 }
 
 check_vm_installed() {
-    qvm-check sys-whonix
+    qvm-check sys-whonix 2>/dev/null
 }
 
 start_vm() {
-    if qvm-check --running sys-whonix ; then
+    if qvm-check --running sys-whonix 2>/dev/null ; then
         true "INFO: already running, ok."
     else
         ## Would exit non-zero if already running.
         true "INFO: Not yet running, starting..."
-        qvm-start sys-whonix
+        qvm-start sys-whonix 2>/dev/null
     fi
 }
 
 vm_setup() {
     ## --pass-io is optional but useful for gathering debug output.
 
-    qvm-run --user root --pass-io sys-whonix "systemctl restart qubes-whonix-remote-support.service"
+    qvm-run --user root --pass-io sys-whonix "systemctl restart qubes-whonix-remote-support.service" >/dev/null
 
-    qvm-run --user root --pass-io sys-whonix "systemctl --no-pager --no-block status qubes-whonix-remote-support.service"
+    qvm-run --user root --pass-io sys-whonix "systemctl --no-pager --no-block status qubes-whonix-remote-support.service" >/dev/null
 
-    qvm-run --user root --pass-io sys-whonix "virtport=22 hsport=22 hsname=remote_support client=1 anon-auth-autogen"
+    qvm-run --user root --pass-io sys-whonix "virtport=22 hsport=22 hsname=remote_support client=1 anon-auth-autogen" >/dev/null
 }
 
 dom0_get_tor_auth_private() {
     dom0_copy_from_vm sys-whonix /var/lib/tor_autogen/remote_support/1.auth_private "$temp_dir/keys/1.auth_private"
 
-    ## TODO: remove debugging
-    cat "$temp_dir/keys/1.auth_private"
+    ## Debugging.
+    #cat "$temp_dir/keys/1.auth_private"
 
     dom0_copy_from_vm sys-whonix /var/lib/tor/remote_support/hostname "$temp_dir/keys/hostname"
 
-    ## TODO: remove debugging
-    cat "$temp_dir/keys/hostname"
+    ## Debugging.
+    #cat "$temp_dir/keys/hostname"
 }
 
 dom0_sshd_setup() {
@@ -157,7 +156,7 @@ dom0_sshd_setup() {
     ## Creates files:
     ## - $temp_dir/keys/id_ed25519
     ## - $temp_dir/keys/id_ed25519.pub
-    ssh-keygen -t ed25519 -f "$temp_dir/keys/id_ed25519" -N "" -C "qubes-remote-support-receiver-auto-generated"
+    ssh-keygen -t ed25519 -f "$temp_dir/keys/id_ed25519" -N "" -C "qubes-remote-support-receiver-auto-generated" >/dev/null
 
     mkdir -p ~/.ssh
     sudo chmod 700 ~/.ssh
@@ -168,12 +167,13 @@ dom0_sshd_setup() {
     echo "$append_string" | tee --append ~/.ssh/authorized_keys >/dev/null
 
     ## systemctl enable not required.
-    sudo systemctl restart sshd.service
-    sudo systemctl --no-pager --no-block status sshd.service
+    sudo systemctl restart sshd.service >/dev/null
+    sudo systemctl --no-pager --no-block status sshd.service >/dev/null
 }
 
 dom0_sshd_fingerprint() {
-    ssh_keyscan_output="$(ssh-keyscan -t ed25519 -H 127.0.0.1)"
+    ## 2>/dev/null to hide stderr "# 127.0.0.1:22 SSH-2.0-OpenSSH_7.4"
+    ssh_keyscan_output="$(ssh-keyscan -t ed25519 -H 127.0.0.1 2>/dev/null)"
     ## example output stderr:
     ## # 127.0.0.1:22 SSH-2.0-OpenSSH_7.4
     ## example output stdout:
@@ -202,20 +202,20 @@ dom0_sshd_fingerprint() {
     ## Could not figure out to use this with known_hosts file.
 
     ## Debugging.
-    cat "$temp_dir/keys/ssh_algorithm"
-    cat "$temp_dir/keys/ssh_fingerprint"
+    #cat "$temp_dir/keys/ssh_algorithm"
+    #cat "$temp_dir/keys/ssh_fingerprint"
 }
 
 dom0_x2go_setup() {
-    sudo x2godbadmin --createdb
+    sudo x2godbadmin --createdb >/dev/null
     ## systemctl enable not required.
-    #sudo systemctl enable x2gocleansessions.service
-    sudo systemctl restart x2gocleansessions.service
-    sudo systemctl --no-pager --no-block status x2gocleansessions.service
+    #sudo systemctl enable x2gocleansessions.service >/dev/null
+    sudo systemctl restart x2gocleansessions.service >/dev/null
+    sudo systemctl --no-pager --no-block status x2gocleansessions.service >/dev/null
 }
 
 dom0_create_key_files_archive() {
-    tar -zcvf "$temp_dir/remote-support-keys.tar.gz" -C "$temp_dir" keys
+    tar -zcvf "$temp_dir/remote-support-keys.tar.gz" -C "$temp_dir" keys >/dev/null
 }
 
 wormhole_send_wrapper() {
@@ -237,7 +237,7 @@ wormhole_send_wrapper() {
         if [ "$first" = "wormhole" ]; then
             if [ "$second" = "receive" ]; then
                 true "${green}${bold}INFO: next line is wormhole code.${reset}"
-                echo "$third"
+                echo "wormhole_code: $third"
                 found=yes
             fi
         fi

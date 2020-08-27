@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -e
 
 ## TODO: do not hardcode sys-whonix - make that an environment variable or command line parameter
@@ -23,30 +22,30 @@ dom0_rpc_policy_setup() {
     append_string="sys-whonix dom0 allow,target=dom0"
 
     ## Debugging.
-    cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
+    #cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
 }
 
 start_vm() {
-    if qvm-check --running sys-whonix ; then
+    if qvm-check --running sys-whonix 2>/dev/null ; then
         true "INFO: already running, ok."
     else
-        qvm-start sys-whonix
+        qvm-start sys-whonix 2>/dev/null
     fi
 }
 
 vm_setup() {
     ## --pass-io is optional but useful for gathering debug output.
 
-    qvm-run --user root --pass-io sys-whonix "systemctl stop qubes-whonix-remote-support.service"
+    qvm-run --user root --pass-io sys-whonix "systemctl stop qubes-whonix-remote-support.service" >/dev/null
 
-    qvm-run --user root --pass-io sys-whonix "rm --force --verbose /usr/local/etc/torrc.d/43_remote_support_hs_autogen.conf"
-    qvm-run --user root --pass-io sys-whonix "rm --force --recursive --verbose /var/lib/tor/remote_support"
-    qvm-run --user root --pass-io sys-whonix "rm --force --recursive --verbose /var/lib/tor_autogen/remote_support"
+    qvm-run --user root --pass-io sys-whonix "rm --force --verbose /usr/local/etc/torrc.d/43_remote_support_hs_autogen.conf" >/dev/null
+    qvm-run --user root --pass-io sys-whonix "rm --force --recursive --verbose /var/lib/tor/remote_support" >/dev/null
+    qvm-run --user root --pass-io sys-whonix "rm --force --recursive --verbose /var/lib/tor_autogen/remote_support" >/dev/null
 
     ## Check if Tor is running.
-    if qvm-run --user root --pass-io sys-whonix "systemctl --no-pager --no-block status tor@default.service" ; then
+    if qvm-run --user root --pass-io sys-whonix "systemctl --no-pager --no-block status tor@default.service" >/dev/null ; then
         ## Yes, Tor is running. Restart it to make Tor forget the onion v3 service.
-        qvm-run --user root --pass-io sys-whonix "systemctl restart tor@default.service"
+        qvm-run --user root --pass-io sys-whonix "systemctl restart tor@default.service" >/dev/null
     fi
 }
 
