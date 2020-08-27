@@ -17,15 +17,19 @@ no_root_check() {
 dom0_rpc_policy_setup() {
     local append_string
 
-    if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
+    if ! test -f "/etc/qubes-rpc/policy/qubes.ConnectTCP+22" ; then
         return 0
     fi
 
-    ## TODO: remove string
     append_string="$vm_name dom0 allow,target=dom0"
 
+    old="$append_string"
+    new=""
+    file_name="/etc/qubes-rpc/policy/qubes.ConnectTCP+22"
+    sudo sed -i "s/$old/$new/g" "$file_name" || true
+
     ## Debugging.
-    #cat /etc/qubes-rpc/policy/qubes.ConnectTCP+22
+    #cat "/etc/qubes-rpc/policy/qubes.ConnectTCP+22"
 }
 
 start_vm() {
