@@ -65,7 +65,7 @@ dom0_sshd_setup() {
     ## Deleting whole file ~/.ssh/authorized_keys seems more robust at the expense
     ## of advanced users and developers using custom (not by qubes-remote-support
     ## package) SSH servers.
-    ## Alternativly, keys matching the SSH key comment
+    ## Alternatively, keys matching the SSH key comment
     ## "qubes-remote-support-receiver-auto-generated" could be removed too but
     ## that code is more fragile to race conditions.
 
