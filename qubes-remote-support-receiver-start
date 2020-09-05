@@ -92,7 +92,10 @@ dom0_run_socat() {
    ## written to stderr.)
 
    ## TODO: Do not hardcode sys-whonix, use vm_name instead (quoting!).
-   ## Port number 9122 is an arbitrarily chosen unused port inside Whonix-Gateway.
+   ## Listen with socat on port 9050 (this is where Tor would listen if this was not dom0).
+   ## Port number 9122 is an arbitrarily chosen unused Tor SocksPort inside Whonix-Gateway.
+   ## This is to allow running "torsocks wormhole" in dom0.
+   ## (As executed by qubes-remote-support-receiver-wormhole-helper.)
    socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''' &
    socat_pid="$!"
 
