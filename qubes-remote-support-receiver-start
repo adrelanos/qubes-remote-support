@@ -4,7 +4,7 @@ set -e
 
 ## TODO: Packaging should make sure these packages are installed in dom0
 ##       before proceeding.
-#sudo qubes-dom0-update socat openssh-server x2goserver
+#sudo qubes-dom0-update torsocks socat openssh-server x2goserver
 
 vm_name="$2"
 if [ "$vm_name" = "" ]; then
@@ -252,7 +252,7 @@ wormhole_send_wrapper() {
     ## wormhole_tool_
     ## - run either 'wormhole send' directly
     ## - or run qubes-remote-support-receiver-wormhole-helper which runs it in a DispVM.
-    done < <( $wormhole_tool "$temp_dir/remote-support-keys.tar.gz" 2>&1 )
+    done < <( qubes-remote-support-receiver-wormhole-helper "$temp_dir/remote-support-keys.tar.gz" 2>&1 )
 
     if [ "$found" = "no" ]; then
         echo "${red}${bold}ERROR: wormhole issue.${reset}" >&2
@@ -272,18 +272,6 @@ dom0_sshd_setup
 dom0_sshd_fingerprint
 dom0_x2go_setup
 dom0_create_key_files_archive
-
-## TODO: What do we do about Qubes R4.0 vs missing magic-wormhole?
-if command -v wormhole >/dev/null ; then
-    ## wormhole available in dom0
-    ## TODO: not implemented yet due to lacking available wormhole in dom0
-    wormhole_tool=wormhole
-else
-    ## Starting a DispVM good enough until Qubes R4.1?
-    ## TODO: path
-    wormhole_tool=~/qubes-remote-support-receiver-wormhole-helper
-fi
-
 wormhole_send_wrapper
 
 true "INFO: Success."

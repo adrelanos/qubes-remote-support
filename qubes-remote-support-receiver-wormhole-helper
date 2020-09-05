@@ -3,6 +3,14 @@
 set -x
 set -e
 
+if command -v wormhole >/dev/null ; then
+    ## wormhole available in dom0 (Qubes R4)
+    wormhole send "$1"
+    exit "$?"
+fi
+
+## wormhole not available in dom0 (Qubes R3.2)
+
 base64_stream="$(cat "$1" | base64 --wrap=0)"
 
 qvm-run \
