@@ -129,6 +129,8 @@ start_vm() {
 vm_setup() {
     ## --pass-io is optional but useful for gathering debug output.
 
+    qvm-run --user root --pass-io "$vm_name" "systemctl start tor" >/dev/null
+
     qvm-run --user root --pass-io "$vm_name" "systemctl restart qubes-whonix-remote-support.service" >/dev/null
 
     qvm-run --user root --pass-io "$vm_name" "systemctl --no-pager --no-block status qubes-whonix-remote-support.service" >/dev/null
