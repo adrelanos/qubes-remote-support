@@ -113,6 +113,8 @@ dom0_run_socat() {
    socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''" &
    socat_pid="$!"
 
+   ## socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\'''
+
    ## Make sure socat is really started. Otherwise if script exits early,
    ## dom0_exit_handler might not have a chance killing socat. And leftover
    ## socat process could break subsequent run of this script.
