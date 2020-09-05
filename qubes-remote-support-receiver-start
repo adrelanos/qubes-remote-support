@@ -306,8 +306,6 @@ preparation
 colors
 trap dom0_exit_handler EXIT
 dom0_run_socat
-exit 55
-
 dom0_rpc_policy_setup
 dom0_sshd_hardening
 check_vm_installed
