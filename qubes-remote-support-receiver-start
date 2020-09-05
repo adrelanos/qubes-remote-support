@@ -110,8 +110,7 @@ dom0_run_socat() {
    ## the case in dom0.
    ##
    ## Port number 9122 is an arbitrarily chosen unused Tor SocksPort inside Whonix-Gateway.
-   ## TODO: Do not hardcode sys-whonix, use vm_name instead (quoting!).
-   socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''' &
+   socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''" &
    socat_pid="$!"
 
    ## Make sure socat is really started. Otherwise if script exits early,
