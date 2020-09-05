@@ -251,12 +251,9 @@ wormhole_send_wrapper() {
                 found=yes
             fi
         fi
-        ## wormhole writes to stderr, hence we must use 2>&1 to redirect to stdout,
-        ## so bash's "while read" can access it.
 
-    ## wormhole_tool_
-    ## - run either 'wormhole send' directly
-    ## - or run qubes-remote-support-receiver-wormhole-helper which runs it in a DispVM.
+    ## wormhole writes to stderr, hence we must use 2>&1 to redirect to stdout,
+    ## so bash's "while read" can access it.
     done < <( qubes-remote-support-receiver-wormhole-helper "$temp_dir/remote-support-keys.tar.gz" 2>&1 )
 
     if [ "$found" = "no" ]; then
