@@ -2,14 +2,21 @@
 
 set -e
 
-## TODO: Packaging should make sure these packages are installed in dom0
-##       before proceeding.
-#sudo qubes-dom0-update torsocks socat openssh-server x2goserver
-
 vm_name="$2"
 if [ "$vm_name" = "" ]; then
     vm_name="sys-whonix"
 fi
+
+dom0_check_dependencies() {
+   ## Packaging should make sure these packages are installed in dom0 before proceeding.
+   #sudo qubes-dom0-update torsocks socat openssh-server x2goserver
+
+   command -v torsocks >/dev/null || { echo "ERROR: missing torsocks" >&2 ; exit 101; };
+   command -v socat >/dev/null || { echo "ERROR: missing socat" >&2 ; exit 102; };
+   command -v sshd >/dev/null || { echo "ERROR: missing sshd" >&2 ; exit 103; };
+
+   ## x2goserver is optional.
+}
 
 no_root_check() {
     if [ "$(id -u)" = "0" ]; then
@@ -303,6 +310,7 @@ wormhole_send_wrapper() {
 }
 
 no_root_check
+dom0_check_dependencies
 preparation
 colors
 trap dom0_exit_handler EXIT
