@@ -6,11 +6,6 @@ set -e
 ##       before proceeding.
 #sudo qubes-dom0-update torsocks socat openssh-server x2goserver
 
-## TODO: Need to run this command in dom0.
-## TODO: Do not hardcode sys-whonix, use vm_name instead (quoting!).
-## Port number 9122 is an arbitrarily chosen unused port inside Whonix-Gateway.
-#sudo socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\'''
-
 vm_name="$2"
 if [ "$vm_name" = "" ]; then
     vm_name="sys-whonix"
@@ -78,6 +73,33 @@ colors() {
                    tput ac; tput ae;         } )   # Drawing characters
        export back=$'\b'
    } 2>/dev/null ||:
+}
+
+dom0_exit_handler() {
+    if [ ! "$socat_pid" = "" ]; then
+       kill -s sigterm "$socat_pid" &>/dev/null || true
+    fi
+}
+
+dom0_run_socat() {
+   ## Running this function early to allow socat to be launched into the background.
+
+   ## We could run "sudo killall socat" or "pkill socat" or similar before.
+   ## This would be useful to clean up leftover socat processes.
+   ## In some race conditions the following might fail due to leftover socat
+   ## processes from previous runs. (Socat would write that port is already in
+   ## use by another application and GUI would detect that as error since
+   ## written to stderr.)
+
+   ## TODO: Do not hardcode sys-whonix, use vm_name instead (quoting!).
+   ## Port number 9122 is an arbitrarily chosen unused port inside Whonix-Gateway.
+   socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''' &
+   socat_pid="$!"
+
+   ## Make sure socat is really started. Otherwise if script exits early,
+   ## dom0_exit_handler might not have a chance killing socat. And leftover
+   ## socat process could break subsequent run of this script.
+   sleep 2
 }
 
 dom0_rpc_policy_setup() {
@@ -264,6 +286,10 @@ wormhole_send_wrapper() {
 no_root_check
 preparation
 colors
+trap dom0_exit_handler EXIT
+dom0_run_socat
+exit 55
+
 dom0_rpc_policy_setup
 dom0_sshd_hardening
 check_vm_installed
