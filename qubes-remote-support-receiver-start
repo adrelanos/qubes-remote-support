@@ -6,6 +6,11 @@ set -e
 ##       before proceeding.
 #sudo qubes-dom0-update torsocks socat openssh-server x2goserver
 
+## TODO: Need to run this command in dom0.
+## TODO: Do not hardcode sys-whonix, use vm_name instead (quoting!).
+## Port number 9122 is an arbitrarily chosen unused port inside Whonix-Gateway.
+#sudo socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\'''
+
 vm_name="$2"
 if [ "$vm_name" = "" ]; then
     vm_name="sys-whonix"
