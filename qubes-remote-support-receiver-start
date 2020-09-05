@@ -91,10 +91,17 @@ dom0_run_socat() {
    ## use by another application and GUI would detect that as error since
    ## written to stderr.)
 
+   ## By Qubes default, dom0 is non-networked.
+   ## Use socat in combination with torsocks to allow running wormhole directly
+   ## from Qubes dom0. This is to make VMs untrusted. I.e. a compromised VM
+   ## should not get access to dom0 SSH server keys.
+   ## In other words, allow running "torsocks wormhole" in dom0.
+   ## (As executed by qubes-remote-support-receiver-wormhole-helper.)
+   ##
    ## Listen with socat on port 9050 (this is where Tor would listen if this was not dom0).
    ## torsocks with its default configuration will use port 9050.
    ##
-   ## We could use any port other than 9050.
+   ## We could use any dom0 port other than 9050.
    ## For that we would have to use something like this:
    ## TORSOCKS_CONF_FILE=/path/to/qubes-remote-support-torsocks-config torsocks
    ## But since nothing should be listening on port 9050 in dom0 the choice of
@@ -103,9 +110,6 @@ dom0_run_socat() {
    ## the case in dom0.
    ##
    ## Port number 9122 is an arbitrarily chosen unused Tor SocksPort inside Whonix-Gateway.
-   ## This is to allow running "torsocks wormhole" in dom0.
-   ## (As executed by qubes-remote-support-receiver-wormhole-helper.)
-   ##
    ## TODO: Do not hardcode sys-whonix, use vm_name instead (quoting!).
    socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''' &
    socat_pid="$!"
