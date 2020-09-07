@@ -18,8 +18,7 @@ Scripts to easily receive remote support using Qubes OS.
 %setup -q
 
 %install
-mkdir $RPM_BUILD_ROOT/usr
-cp -a bin $RPM_BUILD_ROOT/usr/
+make install-dom0 DESTDIR=$RPM_BUILD_ROOT
 
 %files
 /usr/bin/qubes-remote-support-receiver-start
