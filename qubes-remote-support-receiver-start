@@ -126,6 +126,9 @@ dom0_run_socat() {
    ## dom0_exit_handler might not have a chance killing socat. And leftover
    ## socat process could break subsequent run of this script.
    sleep 2
+
+   ## Symptom, shell output if socat is already listening:
+   ## 2020/09/30 06:50:40 socat[4168765] E bind(5, {AF=2 0.0.0.0:9050}, 16): Address already in use
 }
 
 dom0_rpc_policy_setup() {
