@@ -86,7 +86,7 @@ dom0_sshd_setup() {
     sed -i '/qubes-remote-support-receiver-auto-generated/,+1 d' ~/.ssh/authorized_keys || true
 
     ## TODO: Do not stop if it was previously running (set up by system admin).
-    sudo systemctl stop sshd.service
+    #sudo systemctl stop sshd.service
 }
 
 dom0_x2go_setup() {
