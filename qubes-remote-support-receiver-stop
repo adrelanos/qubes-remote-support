@@ -85,7 +85,7 @@ dom0_sshd_setup() {
     ## that code is more fragile to race conditions. That is implemented now.
     sed -i '/qubes-remote-support-receiver-auto-generated/,+1 d' ~/.ssh/authorized_keys || true
 
-    ## TODO: Do not stop if it was previously running.
+    ## TODO: Do not stop if it was previously running (set up by system admin).
     sudo systemctl stop sshd.service
 }
 
