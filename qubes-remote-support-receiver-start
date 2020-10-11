@@ -135,7 +135,9 @@ dom0_run_socat() {
 
    ## socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\'''
 
-   ## Make sure socat is really started.
+   ## Give socat sufficient time to set up listener.
+   ## Hardcoded wait.A non-hardcoded, event based a protocol where socat signals readiness similar to
+   ## systemd-notify would be overly complex.
    sleep 2
 
    ## Symptom, shell output if socat is already listening:
