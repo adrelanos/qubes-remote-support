@@ -14,6 +14,11 @@ no_root_check() {
     fi
 }
 
+dom0_terminate_remote_support_provider_start() {
+   ## This writes "KILLED" to the console where the start script has run.
+   kill -s KILL $(pgrep -f qubes-remote-support-receiver-start) &>/dev/null || true
+}
+
 dom0_terminate_socat() {
    systemctl --user stop socat-9050 &>/dev/null || true
    systemctl --user reset-failed socat-9050 &>/dev/null || true
@@ -89,6 +94,7 @@ dom0_x2go_setup() {
 
 no_root_check
 dom0_terminate_socat
+dom0_terminate_remote_support_provider_start
 dom0_rpc_policy_setup
 
 dom0_sshd_setup
