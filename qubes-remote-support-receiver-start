@@ -314,7 +314,7 @@ wormhole_send_wrapper() {
         if [ "$first" = "wormhole" ]; then
             if [ "$second" = "receive" ]; then
                 echo "INFO: File transfer too magic-wormhole successfully started."
-                echo "INFO: The next line will show a wormhole code phrase. Send the code to the Qubes Remote Support Provider."
+                echo "INFO: The next line will show a wormhole code phrase. Send the code to the Qubes Remote Support Provider. Once the the Qubes Remote Support Provider acknowledged receipt, just wait."
                 true "${green}${bold}INFO: next line is wormhole code.${reset}"
                 echo "wormhole_code: $third"
                 found=yes
