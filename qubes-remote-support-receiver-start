@@ -25,6 +25,12 @@ no_root_check() {
     fi
 }
 
+start_info() {
+   echo "INFO: Starting Qubes Remote Support Receiver."
+   echo "INFO: This tool is supposed to be run for those who wish to receive remote support."
+   echo "INFO: Setting up... This will take a moment..."
+}
+
 dom0_copy_from_vm() {
     qvm-run --user root --pass-io "$1" "cat $2" > "$3"
 }
@@ -250,7 +256,7 @@ dom0_sshd_fingerprint() {
     ## We cannot use the hashed hostname as dom0 is "unaware" of its onion hostname.
     ## dom0 cannot reach the onion hostname using ssh ssh-keyscan.
     ## And if that was possible, it should not. Fingerprint should be securely obtained from localhost.
-    read -r one two three <<< "$ssh_keyscan_output" || { echo "parsing error in ssh_keyscan_output: '$ssh_keyscan_output'" >&2 ; true ;};
+    read -r one two three <<< "$ssh_keyscan_output" || { echo "ERROR: parsing error in ssh_keyscan_output: '$ssh_keyscan_output'" >&2 ; true ;};
 
     ssh_algorithm="$two"
     ssh_fingerprint="$three"
@@ -286,6 +292,11 @@ dom0_create_key_files_archive() {
 wormhole_send_wrapper() {
     test -r "$temp_dir/remote-support-keys.tar.gz"
 
+    echo "INFO: Remote support archive file '$temp_dir/remote-support-keys.tar.gz' was successfully created."
+    echo "INFO: (That file allows a Qubes Remote Support Provider to connect to this machine.)"
+    echo "INFO: (No need to do anything with that file.)"
+    echo "INFO: Starting the file transfer tool magic-wormhole... This will take a moment..."
+
     local found
     found=no
 
@@ -295,12 +306,15 @@ wormhole_send_wrapper() {
             ## Shorter xtrace.
             continue
         fi
-        read -r first second third _ <<< "$line" || { echo "parsing error in line: '$line'" >&2 ; true ;};
+        read -r first second third _ <<< "$line" || { echo "ERROR: parsing error in line: '$line'" >&2 ; true ;};
         true "first: $first"
         true "second: $second"
         true "third: $third"
         if [ "$first" = "wormhole" ]; then
             if [ "$second" = "receive" ]; then
+                echo "INFO: File transfer too magic-wormhole successfully started."
+                echo "INFO: The next line will show a wormhole code phrase. Give "
+
                 true "${green}${bold}INFO: next line is wormhole code.${reset}"
                 echo "wormhole_code: $third"
                 found=yes
@@ -313,10 +327,21 @@ wormhole_send_wrapper() {
 
     if [ "$found" = "no" ]; then
         echo "${red}${bold}ERROR: wormhole issue.${reset}" >&2
+        return 0
     fi
+
+    echo "INFO: The Qubes Remote Support Provider successfully received the remote support archive file and is now able to establish remote support."
+    echo "INFO: This can take up to 10 minutes."
+    echo ""
+    echo "INFO: Should you wish to stop this Qubes Remote Support Session, please run:"
+    echo "qubes-remote-support-receiver-stop"
+    echo ""
+    echo "INFO: This tool will exit now and there is nothing else to do besides waiting."
+    echo "INFO: Success."
 }
 
 no_root_check
+start_info
 dom0_check_dependencies
 preparation
 colors
