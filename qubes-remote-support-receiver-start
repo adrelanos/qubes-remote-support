@@ -27,7 +27,7 @@ no_root_check() {
 
 start_info() {
    echo "INFO: Starting Qubes Remote Support Receiver."
-   echo "INFO: This tool is supposed to be run for those who wish to receive remote support."
+   echo "INFO: This tool is supposed to be run by those who wish to receive remote support."
    echo "INFO: Setting up... This will take a moment..."
 }
 
