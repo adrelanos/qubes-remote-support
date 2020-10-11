@@ -24,10 +24,6 @@ no_root_check() {
     fi
 }
 
-socat_check() {
-   systemctl --user --no-pager --no-block status socat-9050
-}
-
 dom0_check_rpc_policy() {
     local append_string
 
@@ -67,7 +63,6 @@ dom0_check_sshd_status() {
 }
 
 no_root_check
-socat_check
 
 ## If dom0 SSH server is not running, there is no way to remote administrate dom0.
 ## However, the onion v3 service might still be running inside $vm_name in case
