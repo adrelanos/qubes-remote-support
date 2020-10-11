@@ -83,20 +83,12 @@ colors() {
 }
 
 dom0_exit_handler() {
-    if [ ! "$socat_pid" = "" ]; then
-       kill -s sigterm "$socat_pid" &>/dev/null || true
-    fi
+   systemctl --user stop socat-9050 &>/dev/null || true
+   systemctl --user reset-failed socat-9050 &>/dev/null || true
 }
 
 dom0_run_socat() {
    ## Running this function early to allow socat to be launched into the background.
-
-   ## We could run "sudo killall socat" or "pkill socat" or similar before.
-   ## This would be useful to clean up leftover socat processes.
-   ## In some race conditions the following might fail due to leftover socat
-   ## processes from previous runs. (Socat would write that port is already in
-   ## use by another application and GUI would detect that as error since
-   ## written to stderr.)
 
    ## By Qubes default, dom0 is non-networked.
    ## Use socat in combination with torsocks to allow running wormhole directly
@@ -105,7 +97,9 @@ dom0_run_socat() {
    ## In other words, allow running "torsocks wormhole" in dom0.
    ## (As executed by qubes-remote-support-receiver-wormhole-helper.)
    ##
-   ## Listen with socat on port 9050 (this is where Tor would listen if this was not dom0).
+   ## Listen with socat on port 9050.
+   ## (9050 is the default Tor listening port. I.e. if Tor was installed, it would
+   ## listen on that port. This is being simulated.)
    ## torsocks with its default configuration will use port 9050.
    ##
    ## We could use any dom0 port other than 9050.
@@ -113,18 +107,28 @@ dom0_run_socat() {
    ## TORSOCKS_CONF_FILE=/path/to/qubes-remote-support-torsocks-config torsocks
    ## But since nothing should be listening on port 9050 in dom0 the choice of
    ## this port is appropriate at a small expense of breakage if Tor was
-   ## installed in dom0 with default configuration which really should not be
-   ## the case in dom0.
+   ## installed in dom0 which really should not be the case in dom0 and
+   ## certainty is not the case in default configuration.
    ##
    ## Port number 9122 is an arbitrarily chosen unused Tor SocksPort inside Whonix-Gateway.
-   socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''" &
-   socat_pid="$!"
+   ##
+   ## Using bash with 'program-name &' followed by 'pid=$!' and writing that to a pid file
+   ## is prone to race conditions. To avoid having to manually maintain a state, a pid file,
+   ## systemd-run is being used.
+
+   ## Terminate possibly running leftover processes from a previous run in case a previous
+   ## run of this script was terminated with sigkill thorugh a kernel OOM due to an unrelated
+   ## issue. This is to avoid race conditions.
+   systemctl --user stop socat-9050 &>/dev/null || true
+   systemctl --user reset-failed socat-9050 &>/dev/null || true
+
+   systemd-run --user --unit socat-9050 socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''"
+
+   systemctl --user --no-pager --no-block status socat-9050 >/dev/null
 
    ## socat TCP-LISTEN:9050,reuseaddr,fork 'EXEC:qrexec-client -d sys-whonix user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\'''
 
-   ## Make sure socat is really started. Otherwise if script exits early,
-   ## dom0_exit_handler might not have a chance killing socat. And leftover
-   ## socat process could break subsequent run of this script.
+   ## Make sure socat is really started.
    sleep 2
 
    ## Symptom, shell output if socat is already listening:
