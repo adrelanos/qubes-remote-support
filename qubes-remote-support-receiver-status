@@ -59,7 +59,7 @@ check_vm_status() {
 }
 
 dom0_check_sshd_status() {
-    sudo systemctl --no-pager --no-block status sshd.service
+    sudo --noninteracitve systemctl --no-pager --no-block status sshd.service
 }
 
 no_root_check
