@@ -38,6 +38,7 @@ dom0_copy_from_vm() {
 preparation() {
     temp_dir="$(mktemp --directory)"
     mkdir -p "$temp_dir/keys"
+    mkdir -p ~/.qubes-remote-support
 }
 
 colors() {
@@ -241,7 +242,19 @@ dom0_sshd_setup() {
     echo "$append_string" | tee --append ~/.ssh/authorized_keys >/dev/null
 
     ## systemctl enable not required.
-    sudo systemctl restart sshd.service >/dev/null
+
+    if sudo systemctl --no-pager --no-block status sshd.service >/dev/null ; then
+        true "INFO: sshd is already running."
+        ## Adding a key to ~/.ssh/authorized_keys does not require a reload or
+        ## even restart of the sshd service.
+        touch ~/.qubes-remote-support/sshd_was_already_running.status
+    else
+        true "INFO: sshd was not yet started. Starting sshd..."
+        rm -f ~/.qubes-remote-support/sshd_was_already_running.status
+        sudo systemctl restart sshd.service >/dev/null
+        true "INFO: Started sshd."
+    fi
+
     sudo systemctl --no-pager --no-block status sshd.service >/dev/null
 }
 
