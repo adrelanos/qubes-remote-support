@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -e
 set -o errtrace
 
@@ -34,7 +33,7 @@ dom0_check_rpc_policy() {
     append_string="$vm_name dom0 allow,target=dom0"
 
     if grep -q "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
-        true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 looks OK."
+        echo "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 looks OK."
     else
         echo "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 missing line
 $append_string
@@ -45,7 +44,7 @@ remote support will not work." >&2
 
 check_vm_started() {
     if qvm-check --running "$vm_name" ; then
-        true "INFO: already running, ok."
+        echo "INFO: VM '$vm_name' already running, ok."
     else
         exit 3
     fi
@@ -73,4 +72,4 @@ dom0_check_rpc_policy
 check_vm_started
 check_vm_status
 
-true "INFO: Success."
+echo "INFO: Success."

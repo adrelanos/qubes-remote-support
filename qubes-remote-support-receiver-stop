@@ -44,7 +44,7 @@ dom0_rpc_policy_setup() {
 
 start_vm() {
     if qvm-check --running "$vm_name" 2>/dev/null ; then
-        true "INFO: already running, ok."
+        echo "INFO: VM '$vm_name' already running, ok."
     else
         qvm-start "$vm_name" 2>/dev/null
     fi
@@ -86,9 +86,9 @@ dom0_sshd_setup() {
     sed -i '/qubes-remote-support-receiver-auto-generated/,+1 d' ~/.ssh/authorized_keys || true
 
     if test -f ~/.qubes-remote-support/sshd_was_already_running.status ; then
-        true "INFO: sshd was previously running, therefore not stopping it, ok."
+        echo "INFO: sshd was previously running, therefore not stopping it, ok."
     else
-        true "INFO: sshd was not previously running, therefore stopping it, ok."
+        echo "INFO: sshd was not previously running, therefore stopping it, ok."
         sudo --noninteracitve systemctl stop sshd.service
     fi
 }
@@ -108,4 +108,4 @@ dom0_x2go_setup
 start_vm
 vm_setup
 
-true "INFO: Success."
+echo "INFO: Success."
