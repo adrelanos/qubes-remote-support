@@ -36,7 +36,7 @@ dom0_rpc_policy_setup() {
     old="$append_string"
     new=""
     file_name="/etc/qubes-rpc/policy/qubes.ConnectTCP+22"
-    sudo --noninteracitve sed -i "s/$old/$new/g" "$file_name" || true
+    sudo --noninteractive sed -i "s/$old/$new/g" "$file_name" || true
 
     ## Debugging.
     #cat "/etc/qubes-rpc/policy/qubes.ConnectTCP+22"
@@ -68,9 +68,9 @@ vm_setup() {
 
 dom0_sshd_setup() {
     mkdir -p ~/.ssh
-    sudo --noninteracitve chmod 700 ~/.ssh
+    sudo --noninteractive chmod 700 ~/.ssh
     touch ~/.ssh/authorized_keys
-    sudo --noninteracitve chmod 600 ~/.ssh/*
+    sudo --noninteractive chmod 600 ~/.ssh/*
 
     ## XXX: Should remove all keys from file ~/.ssh/authorized_keys that contain
     ## comment qubes-remote-support-receiver-auto-generated or delete whole file
@@ -89,12 +89,12 @@ dom0_sshd_setup() {
         echo "INFO: sshd was previously running, therefore not stopping it, ok."
     else
         echo "INFO: sshd was not previously running, therefore stopping it, ok."
-        sudo --noninteracitve systemctl stop sshd.service
+        sudo --noninteractive systemctl stop sshd.service
     fi
 }
 
 dom0_x2go_setup() {
-    sudo --noninteracitve systemctl stop x2gocleansessions.service
+    sudo --noninteractive systemctl stop x2gocleansessions.service
 }
 
 no_root_check
