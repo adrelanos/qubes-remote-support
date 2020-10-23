@@ -108,4 +108,4 @@ dom0_x2go_setup
 start_vm
 vm_setup
 
-echo "INFO: Success."
+echo "INFO: Success, remote support received has been turned off."
