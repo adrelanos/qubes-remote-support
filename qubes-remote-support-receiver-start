@@ -149,11 +149,11 @@ dom0_rpc_policy_setup() {
     local append_string
 
     if ! test -d /etc/qubes-rpc/policy ; then
-        sudo --noninteractive mkdir -p /etc/qubes-rpc/policy
+        sudo --non-interactive mkdir -p /etc/qubes-rpc/policy
     fi
 
     if ! test -f /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
-        sudo --noninteractive touch /etc/qubes-rpc/policy/qubes.ConnectTCP+22
+        sudo --non-interactive touch /etc/qubes-rpc/policy/qubes.ConnectTCP+22
     fi
 
     test -r /etc/qubes-rpc/policy/qubes.ConnectTCP+22
@@ -162,7 +162,7 @@ dom0_rpc_policy_setup() {
     if grep --quiet "$append_string" /etc/qubes-rpc/policy/qubes.ConnectTCP+22 ; then
         true "INFO: /etc/qubes-rpc/policy/qubes.ConnectTCP+22 added modified."
     else
-        echo "$append_string" | sudo --noninteractive tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP+22 >/dev/null
+        echo "$append_string" | sudo --non-interactive tee --append /etc/qubes-rpc/policy/qubes.ConnectTCP+22 >/dev/null
     fi
 
     ## Debugging.
@@ -179,7 +179,7 @@ dom0_sshd_hardening() {
     old="PasswordAuthentication yes"
     new="PasswordAuthentication no"
     file_name="/etc/ssh/sshd_config"
-    sudo --noninteractive sed -i "s/$old/$new/g" "$file_name"
+    sudo --non-interactive sed -i "s/$old/$new/g" "$file_name"
 }
 
 check_vm_installed() {
@@ -234,16 +234,16 @@ dom0_sshd_setup() {
     ssh-keygen -t ed25519 -f "$temp_dir/keys/id_ed25519" -N "" -C "qubes-remote-support-receiver-auto-generated" >/dev/null
 
     mkdir -p ~/.ssh
-    sudo --noninteractive chmod 700 ~/.ssh
+    sudo --non-interactive chmod 700 ~/.ssh
     touch ~/.ssh/authorized_keys
-    sudo --noninteractive chmod 600 ~/.ssh/*
+    sudo --non-interactive chmod 600 ~/.ssh/*
 
     append_string="$(cat "$temp_dir/keys/id_ed25519.pub")"
     echo "$append_string" | tee --append ~/.ssh/authorized_keys >/dev/null
 
     ## systemctl enable not required.
 
-    if sudo --noninteractive systemctl --no-pager --no-block status sshd.service >/dev/null ; then
+    if sudo --non-interactive systemctl --no-pager --no-block status sshd.service >/dev/null ; then
         true "INFO: sshd is already running."
         ## Adding a key to ~/.ssh/authorized_keys does not require a reload or
         ## even restart of the sshd service.
@@ -251,11 +251,11 @@ dom0_sshd_setup() {
     else
         true "INFO: sshd was not yet started. Starting sshd..."
         rm -f ~/.qubes-remote-support/sshd_was_already_running.status
-        sudo --noninteractive systemctl restart sshd.service >/dev/null
+        sudo --non-interactive systemctl restart sshd.service >/dev/null
         true "INFO: Started sshd."
     fi
 
-    sudo --noninteractive systemctl --no-pager --no-block status sshd.service >/dev/null
+    sudo --non-interactive systemctl --no-pager --no-block status sshd.service >/dev/null
 }
 
 dom0_sshd_fingerprint() {
@@ -294,11 +294,11 @@ dom0_sshd_fingerprint() {
 }
 
 dom0_x2go_setup() {
-    sudo --noninteractive x2godbadmin --createdb >/dev/null
+    sudo --non-interactive x2godbadmin --createdb >/dev/null
     ## systemctl enable not required.
-    #sudo --noninteractive systemctl enable x2gocleansessions.service >/dev/null
-    sudo --noninteractive systemctl restart x2gocleansessions.service >/dev/null
-    sudo --noninteractive systemctl --no-pager --no-block status x2gocleansessions.service >/dev/null
+    #sudo --non-interactive systemctl enable x2gocleansessions.service >/dev/null
+    sudo --non-interactive systemctl restart x2gocleansessions.service >/dev/null
+    sudo --non-interactive systemctl --no-pager --no-block status x2gocleansessions.service >/dev/null
 }
 
 dom0_create_key_files_archive() {
