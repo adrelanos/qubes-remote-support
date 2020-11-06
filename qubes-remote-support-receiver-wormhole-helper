@@ -5,7 +5,7 @@ set -e
 
 if command -v wormhole >/dev/null ; then
     ## wormhole available in dom0 (Qubes R4.1)
-    wormhole send "$1"
+    wormhole send --code-length=4 "$1"
     exit "$?"
 fi
 
@@ -25,7 +25,7 @@ mkdir /tmp/qubes-remote-support
 
 echo \"$base64_stream\" | base64 --decode > /tmp/qubes-remote-support/remote-support-keys.tar.gz
 
-wormhole send /tmp/qubes-remote-support/remote-support-keys.tar.gz
+wormhole send --code-length=4 /tmp/qubes-remote-support/remote-support-keys.tar.gz
 
 \"
 "
