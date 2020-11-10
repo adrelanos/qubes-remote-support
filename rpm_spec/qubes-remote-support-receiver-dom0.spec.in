@@ -7,9 +7,15 @@ Group:	Applications/System
 License:	GPL
 URL:		https://www.qubes-os.org/doc/remote-support/
 
+BuildRequires:  python3-devel
+
 Requires: torsocks socat openssh-server x2goserver
+Requires:  python3-setuptools
+Requires:  gtk3
 
 Source0: %{name}-%{version}.tar.gz
+
+BuildArch: noarch
 
 %description
 Scripts to easily receive remote support using Qubes OS.
@@ -17,14 +23,70 @@ Scripts to easily receive remote support using Qubes OS.
 %prep
 %setup -q
 
+%build
+%py3_build
+
 %install
+%py3_install
 make install-dom0 DESTDIR=$RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/etc/xdg/autostart
+cp qubes-remote-support-gui.desktop $RPM_BUILD_ROOT/etc/xdg/autostart
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/22x22/apps/
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/24x24/apps/
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/32x32/apps/
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/36x36/apps/
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/48x48/apps/
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/64x64/apps/
+mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/72x72/apps/
+cp icons/22x22/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/22x22/apps/qubes-remote.png
+cp icons/24x24/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/24x24/apps/qubes-remote.png
+cp icons/32x32/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/32x32/apps/qubes-remote.png
+cp icons/36x36/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/36x36/apps/qubes-remote.png
+cp icons/48x48/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/48x48/apps/qubes-remote.png
+cp icons/64x64/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/64x64/apps/qubes-remote.png
+cp icons/72x72/qubes-remote.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/72x72/apps/qubes-remote.png
+cp icons/22x22/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/22x22/apps/qubes-remote-on.png
+cp icons/24x24/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/24x24/apps/qubes-remote-on.png
+cp icons/32x32/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/32x32/apps/qubes-remote-on.png
+cp icons/36x36/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/36x36/apps/qubes-remote-on.png
+cp icons/48x48/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/48x48/apps/qubes-remote-on.png
+cp icons/64x64/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/64x64/apps/qubes-remote-on.png
+cp icons/72x72/qubes-remote-on.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/72x72/apps/qubes-remote-on.png
+
 
 %files
+%defattr(-,root,root,-)
 /usr/bin/qubes-remote-support-receiver-start
 /usr/bin/qubes-remote-support-receiver-stop
 /usr/bin/qubes-remote-support-receiver-status
 /usr/bin/qubes-remote-support-receiver-wormhole-helper
+
+%dir %{python3_sitelib}/remote_gui-*.egg-info
+%{python3_sitelib}/remote_gui-*.egg-info/*
+
+%dir %{python3_sitelib}/remote_gui
+%{python3_sitelib}/remote_gui/__pycache__
+%{python3_sitelib}/remote_gui/__init__.py
+%{python3_sitelib}/remote_gui/remote_gui.py
+%{python3_sitelib}/remote_gui/remote_gui.glade
+
+/usr/bin/qubes-remote-support-gui
+/etc/xdg/autostart/qubes-remote-support-gui.desktop
+
+/usr/share/icons/hicolor/22x22/apps/qubes-remote.png
+/usr/share/icons/hicolor/24x24/apps/qubes-remote.png
+/usr/share/icons/hicolor/32x32/apps/qubes-remote.png
+/usr/share/icons/hicolor/36x36/apps/qubes-remote.png
+/usr/share/icons/hicolor/48x48/apps/qubes-remote.png
+/usr/share/icons/hicolor/64x64/apps/qubes-remote.png
+/usr/share/icons/hicolor/72x72/apps/qubes-remote.png
+/usr/share/icons/hicolor/22x22/apps/qubes-remote-on.png
+/usr/share/icons/hicolor/24x24/apps/qubes-remote-on.png
+/usr/share/icons/hicolor/32x32/apps/qubes-remote-on.png
+/usr/share/icons/hicolor/36x36/apps/qubes-remote-on.png
+/usr/share/icons/hicolor/48x48/apps/qubes-remote-on.png
+/usr/share/icons/hicolor/64x64/apps/qubes-remote-on.png
+/usr/share/icons/hicolor/72x72/apps/qubes-remote-on.png
 
 %changelog
 @CHANGELOG@
