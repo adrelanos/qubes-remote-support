@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=qubes-remote-support-gui
+Icon=qubes-remote-on
+Terminal=false
+Name=Qubes Remote Support
+GenericName=Qubes Remote Support
+StartupNotify=false
+Categories=System;
