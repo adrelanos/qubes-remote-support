@@ -109,32 +109,31 @@ class RemoteSupportGUI(Gtk.Application):
                 self.progress_window.success_label.set_visible(True)
                 break
 
-        while True:
+        while self.start_process.returncode is None:
             if self.aborted:
                 return
             self.start_process.poll()
-            if self.start_process.returncode is None:
-                continue
-            if self.start_process.returncode == 0:
-                GObject.idle_add(self.progress_window.progress_dialog.hide)
-                GObject.idle_add(self.status_icon.enable_icon)
-                GObject.idle_add(
-                    self.show_message,
-                    "Connection successful!",
-                    "Remote connection established. Use tray icon to "
-                         "terminate Qubes Remote Support Daemon when it's "
-                         "no longer needed.",
-                    False)
-                return
+            time.sleep(1)
+
+        if self.start_process.returncode == 0:
             GObject.idle_add(self.progress_window.progress_dialog.hide)
+            GObject.idle_add(self.status_icon.enable_icon)
             GObject.idle_add(
                 self.show_message,
-                "Connection error!",
-                "Remote connection failed. Error code: {}".format(
-                    self.start_process.returncode),
-                False,
-                self.exit_app)
-            time.sleep(1)
+                "Connection successful!",
+                "Remote connection established. Use tray icon to "
+                     "terminate Qubes Remote Support Daemon when it's "
+                     "no longer needed.",
+                False)
+            return
+        GObject.idle_add(self.progress_window.progress_dialog.hide)
+        GObject.idle_add(
+            self.show_message,
+            "Connection error!",
+            "Remote connection failed. Error code: {}".format(
+                self.start_process.returncode),
+            False,
+            self.exit_app)
 
     def progress_thread(self):
         while not self.progress_window.wormhole_label.get_text() and \
