@@ -332,6 +332,8 @@ class AskWindow:
         for domain in domains_with_network:
             if 'whonix' in str(domain) and 'sys' in str(domain):
                 return str(domain)
+
+        for domain in domains_with_network:
             if 'whonix' in str(domain) and domain.klass != 'TemplateVM':
                 return str(domain)
 
