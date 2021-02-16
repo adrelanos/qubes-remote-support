@@ -302,7 +302,7 @@ dom0_x2go_setup() {
 }
 
 dom0_create_key_files_archive() {
-    tar -zcvf "$temp_dir/remote-support-keys.tar.gz" -C "$temp_dir" keys >/dev/null
+    tar -zcf "$temp_dir/remote-support-keys.tar.gz" -C "$temp_dir" keys
 }
 
 wormhole_send_wrapper() {
