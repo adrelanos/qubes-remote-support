@@ -4,7 +4,7 @@ Release: @REL@%{?dist}
 
 Summary:	Qubes Remote Support Receiver
 Group:	Applications/System
-License:	GPL
+License:	GPLv2+
 URL:		https://www.qubes-os.org/doc/remote-support/
 
 BuildRequires:  python3-devel
