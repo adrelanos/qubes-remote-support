@@ -130,7 +130,7 @@ dom0_run_socat() {
    systemctl --user reset-failed socat-9050 &>/dev/null || true
 
    ## Suppress output "Running as unit: socat-9050.service" to avoid confusing Qubes remote support gui.
-   systemd-run --user --unit socat-9050 socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\:\'\''/etc/qubes-rpc/qubes.ConnectTCP 9122\'\''" &>/dev/null
+   systemd-run --user --unit socat-9050 socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\\:\\'\\''/etc/qubes-rpc/qubes.ConnectTCP 9122\\'\\''" &>/dev/null
 
    systemctl --user --no-pager --no-block status socat-9050 >/dev/null
 
@@ -238,8 +238,7 @@ dom0_sshd_setup() {
     touch ~/.ssh/authorized_keys
     sudo --non-interactive chmod 600 ~/.ssh/*
 
-    append_string="$(cat "$temp_dir/keys/id_ed25519.pub")"
-    echo "$append_string" | tee --append ~/.ssh/authorized_keys >/dev/null
+    cat < "$temp_dir/keys/id_ed25519.pub" >> ~/.ssh/authorized_keys
 
     ## systemctl enable not required.
 
@@ -277,8 +276,8 @@ dom0_sshd_fingerprint() {
     ssh_algorithm="$two"
     ssh_fingerprint="$three"
 
-    echo "$ssh_algorithm" | tee "$temp_dir/keys/ssh_algorithm" >/dev/null
-    echo "$ssh_fingerprint" | tee "$temp_dir/keys/ssh_fingerprint" >/dev/null
+    echo "$ssh_algorithm"  > "$temp_dir/keys/ssh_algorithm"
+    echo "$ssh_fingerprint" > "$temp_dir/keys/ssh_fingerprint"
 
     ## output of ssh-keygen not suitable to be added to ~/.ssh/known_hosts
     ## on remote-support-provider.
