@@ -7,6 +7,7 @@ Group:	Applications/System
 License:	GPLv2+
 URL:		https://www.qubes-os.org/doc/remote-support/
 
+BuildRequires:  make
 BuildRequires:  python3-devel
 
 Requires: torsocks socat openssh-server x2goserver
