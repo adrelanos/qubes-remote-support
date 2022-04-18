@@ -1,0 +1,4 @@
+host:
+  rpm:
+    spec:
+    - rpm_spec/qubes-remote-support-receiver-dom0.spec
