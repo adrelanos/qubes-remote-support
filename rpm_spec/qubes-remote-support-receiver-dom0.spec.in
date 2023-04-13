@@ -9,6 +9,7 @@ URL:		https://www.qubes-os.org/doc/remote-support/
 
 BuildRequires:  make
 BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
 
 Requires: torsocks socat openssh-server x2goserver
 Requires:  python3-setuptools
