@@ -130,7 +130,7 @@ dom0_run_socat() {
    systemctl --user reset-failed socat-9050 &>/dev/null || true
 
    ## Suppress output "Running as unit: socat-9050.service" to avoid confusing Qubes remote support gui.
-   systemd-run --user --unit socat-9050 socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name user\\:\\'\\''/etc/qubes-rpc/qubes.ConnectTCP 9122\\'\\''" &>/dev/null
+   systemd-run --user --unit socat-9050 socat TCP-LISTEN:9050,reuseaddr,fork "EXEC:qrexec-client -d $vm_name DEFAULT\\:\\'\\''/etc/qubes-rpc/qubes.ConnectTCP 9122\\'\\''" &>/dev/null
 
    systemctl --user --no-pager --no-block status socat-9050 >/dev/null
 
